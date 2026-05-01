@@ -12,12 +12,12 @@ which artifact you should write where.
 ## The two toolchains, in one sentence each
 
 - **OpenSpec** manages **specs and memory** — proposals, durable capability
-  specs, and the archive. It is the single source of truth for *what we
-  agreed to build*.
+specs, and the archive. It is the single source of truth for *what we
+agreed to build*.
 - **Superpowers** manages **design and execution** — brainstorming the
-  approach, writing TDD-atomized plans, dispatching subagents to build
-  task-by-task, and verifying before claiming done. It is the methodology for
-  *how we build it*.
+approach, writing TDD-atomized plans, dispatching subagents to build
+task-by-task, and verifying before claiming done. It is the methodology for
+*how we build it*.
 
 Neither tool replaces the other. They compose:
 
@@ -74,7 +74,7 @@ OpenSpec proposes & remembers ── Superpowers designs & builds ── OpenSpe
 └──────────────────┘
 ```
 
-Steps ③ + ④ + ⑤ are all triggered by **`/opsx:apply <name>`**. That command is
+Steps ③ + ④ + ⑤ are all triggered by `**/opsx:apply <name>**`. That command is
 the bridge between OpenSpec and Superpowers.
 
 ---
@@ -83,13 +83,15 @@ the bridge between OpenSpec and Superpowers.
 
 There is **one and only one** place each artifact lives:
 
-| Artifact | Lives in | Authored by | Refined by |
-|---|---|---|---|
-| `proposal.md` | `openspec/changes/<name>/` | `/opsx:propose` | Human review (step ②) |
-| `design.md`   | `openspec/changes/<name>/` | `/opsx:propose` (draft) | `superpowers:brainstorming` (in step ③) |
-| `tasks.md`    | `openspec/changes/<name>/` | `/opsx:propose` (draft) | `superpowers:writing-plans` (in step ③) |
-| Capability specs | `openspec/specs/<capability>/spec.md` | `/opsx:archive` (via spec sync) | every future change |
-| Archive | `openspec/changes/archive/YYYY-MM-DD-<name>/` | `/opsx:archive` | — |
+
+| Artifact         | Lives in                                      | Authored by                     | Refined by                              |
+| ---------------- | --------------------------------------------- | ------------------------------- | --------------------------------------- |
+| `proposal.md`    | `openspec/changes/<name>/`                    | `/opsx:propose`                 | Human review (step ②)                   |
+| `design.md`      | `openspec/changes/<name>/`                    | `/opsx:propose` (draft)         | `superpowers:brainstorming` (in step ③) |
+| `tasks.md`       | `openspec/changes/<name>/`                    | `/opsx:propose` (draft)         | `superpowers:writing-plans` (in step ③) |
+| Capability specs | `openspec/specs/<capability>/spec.md`         | `/opsx:archive` (via spec sync) | every future change                     |
+| Archive          | `openspec/changes/archive/YYYY-MM-DD-<name>/` | `/opsx:archive`                 | —                                       |
+
 
 > **Critical override.** Superpowers `brainstorming` and `writing-plans` skills
 > default to writing their output into `docs/superpowers/specs/` and
@@ -130,12 +132,14 @@ proposal + design are sufficient on their own.
 
 ## Entry points (Cursor commands)
 
-| Command | When to use |
-|---|---|
-| `/opsx:propose [<name-or-description>]` | Start a new change. Drafts proposal/design/tasks. |
-| `/opsx:explore [<topic>]` | Think out loud before committing to a change. Read-only thinking partner; never writes code. |
-| `/opsx:apply [<name>]` | Refine design + tasks via Superpowers, then build with TDD subagents. The big one. |
-| `/opsx:archive [<name>]` | After everything is verified done — close the loop and sync specs. |
+
+| Command                                 | When to use                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `/opsx:propose [<name-or-description>]` | Start a new change. Drafts proposal/design/tasks.                                            |
+| `/opsx:explore [<topic>]`               | Think out loud before committing to a change. Read-only thinking partner; never writes code. |
+| `/opsx:apply [<name>]`                  | Refine design + tasks via Superpowers, then build with TDD subagents. The big one.           |
+| `/opsx:archive [<name>]`                | After everything is verified done — close the loop and sync specs.                           |
+
 
 ---
 
@@ -144,12 +148,14 @@ proposal + design are sufficient on their own.
 These are auto-discovered by Cursor; you can also invoke them via the Skill tool.
 
 **OpenSpec workflow skills** (this template):
+
 - `openspec-propose` — used by `/opsx:propose`
 - `openspec-apply-change` — used by `/opsx:apply` (orchestrates Superpowers)
 - `openspec-archive-change` — used by `/opsx:archive`
 - `openspec-explore` — used by `/opsx:explore`
 
 **Superpowers methodology skills** (installed via Cursor plugin):
+
 - `superpowers:brainstorming` — design phase
 - `superpowers:writing-plans` — atomize into TDD steps
 - `superpowers:subagent-driven-development` — build phase
@@ -165,7 +171,7 @@ These are auto-discovered by Cursor; you can also invoke them via the Skill tool
 Don't skip ahead. Even if X seems trivial:
 
 1. Run `/opsx:propose` first. Drafts capture intent and stop you from making
-   wrong assumptions.
+  wrong assumptions.
 2. Get the human to confirm the proposal (step ②).
 3. Run `/opsx:apply` to do the design + build.
 4. Run `/opsx:archive` to sync specs.

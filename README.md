@@ -10,11 +10,13 @@ OpenSpec 管规格和记忆，Superpowers 管设计和执行 —— 两个工具
 
 ## 前置依赖
 
-| 工具 | 用途 | 安装 |
-|---|---|---|
-| `openspec` CLI | 管理规格、变更、归档 | `brew install openspec` 或 `npm i -g openspec`（按官方文档） |
-| Cursor + Superpowers 插件 | 提供 brainstorming / writing-plans / subagent-driven-development / TDD 等 skill | 在 Cursor 中安装 [`cursor-public/superpowers`](https://cursor.com) 插件 |
-| Git | 版本控制（Superpowers 工作流里强制要求） | 略 |
+
+| 工具                      | 用途                                                                           | 安装                                                                |
+| ----------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `openspec` CLI          | 管理规格、变更、归档                                                                   | `brew install openspec` 或 `npm i -g openspec`（按官方文档）              |
+| Cursor + Superpowers 插件 | 提供 brainstorming / writing-plans / subagent-driven-development / TDD 等 skill | 在 Cursor 中安装 `[cursor-public/superpowers](https://cursor.com)` 插件 |
+| Git                     | 版本控制（Superpowers 工作流里强制要求）                                                   | 略                                                                 |
+
 
 模板默认 OpenSpec ≥ 1.2.0，Superpowers 已通过 Cursor 插件机制装好。
 
@@ -87,9 +89,9 @@ cursor .
 
 1. 仔细读一遍生成的 `openspec/changes/add-user-login/proposal.md`，看方向对不对。
 2. 跑 `/opsx:apply add-user-login`：
-   - AI 会判断 design.md 是否需要 brainstorming 深化（一般早期都需要）。
-   - 然后判断 tasks.md 是否需要 writing-plans 原子化。
-   - 最后用 subagent-driven-development 逐任务构建，每一步 TDD 红绿重构 + 双重审查。
+  - AI 会判断 design.md 是否需要 brainstorming 深化（一般早期都需要）。
+  - 然后判断 tasks.md 是否需要 writing-plans 原子化。
+  - 最后用 subagent-driven-development 逐任务构建，每一步 TDD 红绿重构 + 双重审查。
 3. 全部任务打完 ✓ 后，跑 `/opsx:archive add-user-login`，把这次变更产生的规格沉淀进 `openspec/specs/`。
 
 下次再起新的变更时，子代理读 `openspec/specs/` 就能继承上一轮的所有约定，不需要重新摸索。
@@ -102,12 +104,14 @@ cursor .
 
 所有 artifact 都在 `openspec/` 下。**不要**在 `docs/superpowers/` 下另建一份。
 
-| 产物 | 路径 | 谁起草 | 谁深化 |
-|---|---|---|---|
-| `proposal.md` | `openspec/changes/<name>/` | `/opsx:propose` | 人工审查 |
-| `design.md`   | `openspec/changes/<name>/` | `/opsx:propose` 起草 | `superpowers:brainstorming` |
-| `tasks.md`    | `openspec/changes/<name>/` | `/opsx:propose` 起草 | `superpowers:writing-plans` |
-| 能力规格 | `openspec/specs/<capability>/spec.md` | `/opsx:archive` 同步 | 后续每次变更 |
+
+| 产物            | 路径                                    | 谁起草                | 谁深化                         |
+| ------------- | ------------------------------------- | ------------------ | --------------------------- |
+| `proposal.md` | `openspec/changes/<name>/`            | `/opsx:propose`    | 人工审查                        |
+| `design.md`   | `openspec/changes/<name>/`            | `/opsx:propose` 起草 | `superpowers:brainstorming` |
+| `tasks.md`    | `openspec/changes/<name>/`            | `/opsx:propose` 起草 | `superpowers:writing-plans` |
+| 能力规格          | `openspec/specs/<capability>/spec.md` | `/opsx:archive` 同步 | 后续每次变更                      |
+
 
 > Superpowers 的 brainstorming / writing-plans 默认会把产物写到 `docs/superpowers/...`。
 > **本模板里必须覆盖这个默认值**，让它们直接写回 `openspec/changes/<name>/`。
@@ -145,14 +149,16 @@ cursor .
 
 ## 我什么时候应该跑哪个命令？
 
-| 情况 | 命令 |
-|---|---|
-| 我有一个想法，但还没想清楚 | `/opsx:explore` |
-| 我想清楚要做什么了，开始流程 | `/opsx:propose` |
-| 起草完了，proposal 看起来 OK，开始干活 | `/opsx:apply` |
-| 干到一半被打断，想接着干 | `/opsx:apply`（会从未完成的 task 继续） |
-| 全部任务打完 ✓，所有验证都过 | `/opsx:archive` |
-| 我突然想看看现在有哪些活跃变更 | `openspec list` |
+
+| 情况                        | 命令                            |
+| ------------------------- | ----------------------------- |
+| 我有一个想法，但还没想清楚             | `/opsx:explore`               |
+| 我想清楚要做什么了，开始流程            | `/opsx:propose`               |
+| 起草完了，proposal 看起来 OK，开始干活 | `/opsx:apply`                 |
+| 干到一半被打断，想接着干              | `/opsx:apply`（会从未完成的 task 继续） |
+| 全部任务打完 ✓，所有验证都过           | `/opsx:archive`               |
+| 我突然想看看现在有哪些活跃变更           | `openspec list`               |
+
 
 ---
 
