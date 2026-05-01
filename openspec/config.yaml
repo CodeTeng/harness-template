@@ -1,0 +1,72 @@
+schema: spec-driven
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Project context (shown to AI when creating artifacts).
+#
+# This template combines two complementary tools:
+#   • OpenSpec   → manages specs and memory (proposals, capability specs, archive)
+#   • Superpowers → manages design and execution (brainstorming, writing-plans,
+#                   subagent-driven-development, TDD, verification)
+#
+# Every artifact below has a clearly assigned author/refiner so the workflow
+# composes cleanly.
+# ─────────────────────────────────────────────────────────────────────────────
+context: |
+  This project follows the OpenSpec + Superpowers workflow.
+
+  Lifecycle of a change:
+    ① /opsx:propose   → drafts proposal.md + design.md + tasks.md (OpenSpec)
+    ② Human review    → user confirms proposal.md captures the right intent
+    ③ /opsx:apply     → Superpowers brainstorming refines design.md, then
+                        writing-plans atomizes tasks.md into TDD steps
+    ④ /opsx:apply     → subagent-driven-development executes each task
+                        (one fresh subagent per task, TDD red-green-refactor)
+    ⑤ Verification    → verification-before-completion gates the result
+    ⑥ /opsx:archive   → moves change to archive, syncs openspec/specs/
+
+  Source of truth:
+    • openspec/specs/<capability>/spec.md — durable capability specs (the
+      project's long-term memory; subagents read these for context).
+    • openspec/changes/<name>/ — active change artifacts (proposal, design,
+      tasks, optional delta specs). Move to archive when done.
+
+  Authoring conventions:
+    • proposal.md  — the "what & why" (1 page, business intent, non-goals).
+                     Drafted by /opsx:propose, confirmed by the human in step ②.
+    • design.md    — the "how" (architecture, data flow, trade-offs, alternatives
+                     considered). Drafted by /opsx:propose, then DEEPENED by the
+                     Superpowers `brainstorming` skill in step ③.
+    • tasks.md     — TDD-atomized implementation plan. Drafted by /opsx:propose,
+                     then ATOMIZED by the Superpowers `writing-plans` skill in
+                     step ③ into bite-sized red-green-refactor steps with
+                     exact file paths, test code, and commit boundaries.
+    • specs/       — capability specs (only updated on archive via spec sync).
+
+  Conventions for writers:
+    • TDD is the default. Every implementation task in tasks.md must follow
+      red-green-refactor with explicit "Write failing test" → "Verify red" →
+      "Implement minimal code" → "Verify green" → "Commit" steps.
+    • No placeholders. No "TBD", no "add error handling", no "similar to Task N".
+    • Every code step shows the actual code. Every command step shows expected output.
+    • Subagents executing tasks always read openspec/specs/ first for capability
+      context, then the active change's proposal/design/tasks.
+
+# Per-artifact rules — applied by `openspec instructions` when drafting.
+rules:
+  proposal:
+    - Keep proposals tight (under ~400 words). Lead with the problem, not the solution.
+    - Always include a "Non-goals" section to prevent scope creep.
+    - State the success signal (how we'll know this worked) in one sentence.
+
+  design:
+    - Cover architecture, key components, data flow, error handling, and testing approach.
+    - Document at least one alternative considered and why it was rejected.
+    - This document is the seed for `brainstorming` — leave it good enough to
+      iterate on, not exhaustive. Brainstorming will deepen it.
+
+  tasks:
+    - Write tasks as TDD steps from the start: each task has a failing test,
+      minimal implementation, verification, and commit.
+    - Use exact file paths. No "appropriate location" or "the right place".
+    - This document will be atomized by `writing-plans` — start coarse, end fine.
+    - Reference openspec/specs/<capability> when a task changes a spec.
