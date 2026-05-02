@@ -1,0 +1,57 @@
+---
+description: Always run the startup workflow before writing code in this repo. Routes to AGENTS.md and ensures the agent loads the right context (init.sh, openspec list, active change artifacts, capability specs) before any change.
+alwaysApply: true
+---
+
+# Harness startup workflow
+
+Before making any code change in this repository, walk through the startup
+sequence in `AGENTS.md`. This rule fires every conversation because the cost
+of skipping context loading is much higher than the cost of re-checking.
+
+## The mandatory startup sequence
+
+1. **Confirm location.** Run `pwd` to confirm you're in the project root.
+2. **Read `AGENTS.md`** completely — it is the routing layer.
+3. **Run `./init.sh`** — verifies environment and lists active OpenSpec
+   changes. If it fails, repair the baseline before any new work.
+4. **If a change is named or implied** in the user's request, read all of:
+   - `openspec/changes/<name>/proposal.md`
+   - `openspec/changes/<name>/design.md`
+   - `openspec/changes/<name>/tasks.md`
+5. **For any capability your work touches**, read
+   `openspec/specs/<capability>/spec.md` if it exists.
+
+## Where to look for depth
+
+`AGENTS.md` has a "Where to find what" table mapping need → file. Use it.
+**Do not load all of `docs/` upfront** — pull files only when the current
+task touches them.
+
+## When to skip this rule
+
+You may skip the startup sequence if and only if:
+
+- The user has explicitly said "skip startup" or equivalent in this conversation, OR
+- The work is trivially scoped to non-code (editing this very rule file,
+  pure conversation, or answering a question that doesn't require tool use).
+
+In every other case, the startup sequence runs. No "I already know this
+codebase" rationalizations — context evolves between sessions, and OpenSpec
+specs may have changed since you last looked.
+
+## What this rule prevents
+
+- Writing code without reading the active change's design or tasks
+- Claiming completion without running `./init.sh`
+- Reinventing logic already covered by an existing capability spec
+- Drifting from this template's conventions because you didn't load `docs/CONVENTIONS.md`
+- Subagents inheriting stale or incomplete context
+
+## Interaction with other rules
+
+This rule is about **what to do first**. The `karpathy-guidelines` rule is
+about **how to think while doing it** (don't assume, simplicity first,
+surgical changes, goal-driven execution). The two compose: this rule gets
+you loaded with the right context, Karpathy keeps your changes disciplined
+once you start.
