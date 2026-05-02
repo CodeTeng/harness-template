@@ -1,0 +1,6 @@
+---
+description: Always respond to the user in Chinese.
+alwaysApply: true
+---
+
+回答用户的问题时使用中文。
