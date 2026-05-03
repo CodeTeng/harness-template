@@ -89,38 +89,100 @@ If **any** answer is "no" → **invoke the Superpowers `writing-plans` skill**.
 
 If tasks are already atomized, skip this step and announce: "Tasks are atomized, skipping writing-plans."
 
-### 5. Execute via subagent-driven-development
+### 5. Atomization quality gate (control ③)
+
+> **Why this gate exists.** A weakly-atomized `tasks.md` makes reviewer
+> subagents in step 7 find new issues forever — that's the #1 cause of
+> review-fix loops eating budget. Catching it here prevents the loop entirely.
+
+Re-read `tasks.md` and **verify every task** against this concrete checklist:
+
+- [ ] Has the 5-step skeleton: `Write failing test` → `Verify red` (with expected error message) → `Write minimal code` → `Verify green` → `Commit`
+- [ ] Every code step contains an **actual code block** (not "implement X" / "add Y / "handle the case")
+- [ ] Every test step contains an **actual test code block** (not "write tests for the above")
+- [ ] Every command step contains an **expected output** (not just the command)
+- [ ] Every `Create:` / `Modify:` line uses an **exact path** (no "in the appropriate file" / "somewhere under src/")
+- [ ] No banned phrases: "TBD", "TODO", "implement later", "appropriate error handling", "similar to Task N"
+
+**If any task fails the checklist:**
+
+1. Re-invoke `superpowers:writing-plans` ONCE with explicit feedback listing
+   which tasks failed which checks.
+2. Re-run this gate.
+3. If it still fails → **stop and escalate to the user** with the failing
+   tasks listed. Do NOT proceed to step 6 — under-atomized tasks are the
+   root cause of cost blowups.
+
+**If all tasks pass:** announce "Atomization gate passed — N tasks." and continue.
+
+### 6. Task count gate (control ②)
+
+Count the tasks in `tasks.md`.
+
+| Count | Action |
+|---|---|
+| **≤ 5**  | Proceed silently. |
+| **6 – 8** | Warn the user: "This change has N tasks; subagent-driven-development will run ~3–6 subagent calls per task. Estimated total: 18–48 subagent calls. Continue?" Use the **AskUserQuestion tool** with options `Continue` / `Split into smaller changes`. Wait for the answer. |
+| **> 8** | **Refuse to proceed.** Reply: "This change has N tasks, which is above the safe ceiling of 8. A single OpenSpec change should cover one focused capability. Suggested action: split this into multiple changes via `/opsx:propose`. If you really want to push through, re-run `/opsx:apply <name> --force` (you'll need to override this gate explicitly)." Then stop. |
+
+The `--force` override is honored only if the user typed it literally. Do
+not infer the override from "just do it" or similar phrases.
+
+### 7. Execute via subagent-driven-development
 
 **Invoke the Superpowers `subagent-driven-development` skill.**
 
 Provide it with:
+
 - The atomized `tasks.md`.
-- A standing instruction that **every implementer subagent** must, before
-  writing code, read:
-  - `openspec/changes/<name>/proposal.md` (intent)
-  - `openspec/changes/<name>/design.md` (architecture)
-  - Every relevant `openspec/specs/<capability>/spec.md` (durable contracts)
+- A **standing instruction for every implementer subagent**: before writing
+  code, read
+  - `openspec/changes/<name>/proposal.md` (intent),
+  - `openspec/changes/<name>/design.md` (architecture),
+  - every relevant `openspec/specs/<capability>/spec.md` (durable contracts).
+- **Iteration cap (control ①)** — pass this to the skill as a hard rule:
+
+  > Each task's review-fix loop runs **at most 2 rounds**.
+  > A "round" = one implementer turn + one reviewer turn (spec or quality).
+  > After 2 unresolved rounds, **stop the task and escalate to the controller**.
+  > The controller (you, this command) must then pause and ask the user:
+  >
+  > 1. **Accept current implementation** — record the disagreement under
+  >    "Process exceptions" / "Known compromises" in `design.md` and mark the
+  >    task `- [x]`.
+  > 2. **Update spec/design to satisfy the reviewer** — pause this task,
+  >    update the relevant `design.md` or `openspec/specs/<capability>/spec.md`,
+  >    then resume.
+  > 3. **Close this task and defer the residual** — mark the task `- [x]`,
+  >    open a follow-up note in `design.md` under "Deferred work" with a
+  >    one-line summary of what's left, and continue with the next task.
+  >
+  > Do NOT silently retry beyond 2 rounds. Do NOT mark the task done if no
+  > option above was chosen.
 
 That way each fresh subagent inherits unified context from the spec layer
-without inheriting your conversation pollution.
+without inheriting your conversation pollution, and no single task can
+silently consume an unbounded budget.
 
 The skill will, per task:
+
 1. Dispatch an implementer subagent (TDD red-green-refactor).
 2. Dispatch a spec-compliance reviewer subagent.
 3. Dispatch a code-quality reviewer subagent.
-4. Loop fixes until both reviews pass.
-5. Mark task done in `tasks.md`.
+4. Loop fixes — capped at 2 rounds (per control ①). Escalate on cap hit.
+5. Mark task done in `tasks.md` only if both reviews approved or the user
+   chose option 1 / 3 above.
 
 Continue until all tasks are checked off OR a blocker is hit.
 
-### 6. Verification gate
+### 8. Verification gate
 
 Before claiming completion, **invoke the Superpowers `verification-before-completion` skill.**
 
 For each completion claim, run the actual verification command (test suite,
 build, lint), read the output, and only then say "done".
 
-### 7. Show final status
+### 9. Show final status
 
 ```bash
 openspec status --change "<name>"
@@ -138,13 +200,18 @@ and sync `openspec/specs/`.
 
 Phase ③ Design refinement: [brainstorming | skipped]
 Phase ③ Task atomization: [writing-plans | skipped]
-Phase ④ Build: subagent-driven-development
+Phase ③ Atomization gate (control ③): ✓ N tasks pass
+Phase ③ Task count gate (control ②):  ✓ N ≤ 5 (or "user confirmed", or "force-overridden")
+Phase ④ Build: subagent-driven-development (iteration cap = 2)
 
 Task 3/7: <task description>
-  ▸ Implementer subagent: ✓ DONE (4/4 tests passing, committed)
-  ▸ Spec reviewer: ✓ approved
-  ▸ Quality reviewer: ✓ approved
-  ✓ Task complete
+  ▸ Round 1 — Implementer: ✓ DONE (4/4 tests passing, committed)
+              Spec reviewer: ✗ 2 issues (missing X, extra Y)
+              Quality reviewer: skipped (spec round must pass first)
+  ▸ Round 2 — Implementer: fixes applied
+              Spec reviewer: ✓ approved
+              Quality reviewer: ✓ approved
+  ✓ Task complete (within iteration cap)
 
 Task 4/7: <task description>
   ...
@@ -162,7 +229,28 @@ Verification: <test command> → all green
 Run `/opsx:archive <change-name>` to close the loop.
 ```
 
-## Output On Pause
+## Output On Pause (Iteration Cap Hit)
+
+```
+## Build Paused — iteration cap hit
+
+Change: <change-name>
+Task: 4/7 — <task description>
+Progress overall: 3/7 complete
+
+Reviewer pings remaining after 2 rounds:
+  ▸ Spec reviewer:    <unresolved issues>
+  ▸ Quality reviewer: <unresolved issues>
+
+Choose one:
+  1. Accept current implementation (record disagreement in design.md)
+  2. Update spec/design to satisfy the reviewer (pause this task)
+  3. Close this task, defer residual to a follow-up note
+
+What would you like to do?
+```
+
+## Output On Pause (Other Blockers)
 
 ```
 ## Build Paused
@@ -171,7 +259,7 @@ Change: <change-name>
 Progress: 4/7 tasks complete
 
 Blocker: <description>
-  ▸ This was raised by: [implementer | spec-reviewer | quality-reviewer]
+  ▸ Raised by: [implementer | spec-reviewer | quality-reviewer | atomization-gate | task-count-gate]
 
 Options:
 1. <option 1>
@@ -188,6 +276,9 @@ What would you like to do?
 - **Never** skip a Superpowers skill that this command requires — they are
   the quality scaffold.
 - **Never** make a subagent read a plan file by reference; pass the full task text.
+- **Never** silently retry beyond the 2-round iteration cap (control ①).
+- **Never** auto-bypass the atomization gate (control ③) or the task-count
+  gate (control ②) — the user must consent or override explicitly.
 - **Always** route brainstorming/writing-plans output back into the OpenSpec
   change folder (override their default `docs/superpowers/...` paths).
 - **Always** instruct subagents to read `openspec/specs/` before coding.
@@ -198,6 +289,8 @@ What would you like to do?
 ## Fluid Workflow Integration
 
 This command supports re-entry. Run it again after a pause and it will:
+
 1. Reload status from CLI.
 2. Skip brainstorming/writing-plans if their work is already done.
-3. Resume `subagent-driven-development` at the next unchecked task.
+3. Re-run the atomization and task-count gates (cheap; catches drift).
+4. Resume `subagent-driven-development` at the next unchecked task.
