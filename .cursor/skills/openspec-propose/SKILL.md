@@ -34,13 +34,42 @@ When ready, run `/opsx:apply <name>` (which orchestrates ③④⑤).
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-2. **Create the change directory**
+2. **Size triage — recommend `openspec-quick` if the change looks small**
+
+   Before creating any files, check the description for "small change"
+   signals:
+
+   - Description short (< 50 chars) AND a single concrete action.
+   - Phrases like: "修一下" / "加个字段" / "改个文案" / "fix" / "add a log" / "rename".
+   - Bug-fix language: "不对" / "错" / "失败" / "throws" / "returns wrong".
+   - User names a specific file/function and a single change to it.
+   - You can imagine the diff < 50 lines without speculating.
+
+   **If 2 or more signals fire**, do NOT create a change. Use
+   **AskUserQuestion**:
+
+   > "This change looks small. The full OpenSpec + Superpowers cycle has
+   > 5+ steps of fixed overhead plus ~3 subagent calls per task — usually
+   > not worth it for small fixes. Recommend switching to `/opsx:quick`."
+
+   Options:
+
+   - `Switch to /opsx:quick (recommended)` — exit; tell user to re-run as `/opsx:quick <original description>`. Do NOT silently switch.
+   - `Continue with /opsx:propose anyway` — proceed to step 3.
+   - `Let me re-describe in more detail` — re-ask the input question, then re-run triage.
+
+   **If signals don't fire** — proceed silently to step 3.
+
+   **Ask only once.** If user picked "continue anyway" once, never re-prompt
+   in the same propose run.
+
+3. **Create the change directory**
    ```bash
    openspec new change "<name>"
    ```
    This creates a scaffolded change at `openspec/changes/<name>/` with `.openspec.yaml`.
 
-3. **Get the artifact build order**
+4. **Get the artifact build order**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -48,7 +77,7 @@ When ready, run `/opsx:apply <name>` (which orchestrates ③④⑤).
    - `applyRequires`: array of artifact IDs needed before implementation (e.g., `["tasks"]`)
    - `artifacts`: list of all artifacts with their status and dependencies
 
-4. **Create artifacts in sequence until apply-ready**
+5. **Create artifacts in sequence until apply-ready**
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -80,7 +109,7 @@ When ready, run `/opsx:apply <name>` (which orchestrates ③④⑤).
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
-5. **Show final status**
+6. **Show final status**
    ```bash
    openspec status --change "<name>"
    ```

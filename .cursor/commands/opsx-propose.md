@@ -30,13 +30,44 @@ run `/opsx:apply <name>` to refine and build.
 
    **IMPORTANT**: Do NOT proceed without understanding what the user wants to build.
 
-2. **Create the change directory**
+2. **Size triage — recommend `/opsx:quick` if the change looks small**
+
+   Before creating any files, look at the user's description and check
+   for "small change" signals:
+
+   - Description is short (< 50 characters) AND mentions a single concrete action.
+   - Phrases like: "修一下" / "加个字段" / "改个文案" / "调一下" / "fix" / "add a log" / "rename".
+   - Bug-fix language: "不对" / "错" / "失败" / "报错" / "throws" / "returns wrong".
+   - The user names a specific file or function and a single change to it.
+   - You can imagine the diff being < 50 lines without speculating.
+
+   **If 2 or more signals fire**, do NOT create a change. Use the
+   **AskUserQuestion tool**:
+
+   > "这个改动看起来比较小。完整的 OpenSpec + Superpowers 流程会有
+   > 5+ 步固定开销 + ~3 次/任务 子代理调用，对小修改通常不划算。
+   > 建议改用 `/opsx:quick` —— 直接 inline TDD + verification，
+   > 完成后再问要不要沉淀进 spec。"
+
+   Options:
+
+   - `Switch to /opsx:quick (recommended)` — exit this command and tell the user to re-run as `/opsx:quick <original description>`. Do NOT silently switch and run quick yourself; let the user re-issue the command so the intent is explicit.
+   - `Continue with /opsx:propose anyway` — the user knows something you don't (architectural impact, multiple files, etc.). Continue to step 3.
+   - `Let me re-describe in more detail` — re-ask the input question, then re-run size triage.
+
+   **If signals don't fire** (the change looks medium/large) — proceed
+   to step 3 silently.
+
+   **Do not pile on**: only ask once. If the user picked "continue
+   anyway" once, never re-prompt during the same propose run.
+
+3. **Create the change directory**
    ```bash
    openspec new change "<name>"
    ```
    This creates a scaffolded change at `openspec/changes/<name>/` with `.openspec.yaml`.
 
-3. **Get the artifact build order**
+4. **Get the artifact build order**
    ```bash
    openspec status --change "<name>" --json
    ```
@@ -44,7 +75,7 @@ run `/opsx:apply <name>` to refine and build.
    - `applyRequires`: array of artifact IDs needed before implementation (e.g., `["tasks"]`)
    - `artifacts`: list of all artifacts with their status and dependencies
 
-4. **Create artifacts in sequence until apply-ready**
+5. **Create artifacts in sequence until apply-ready**
 
    Use the **TodoWrite tool** to track progress through the artifacts.
 
@@ -76,7 +107,7 @@ run `/opsx:apply <name>` to refine and build.
       - Use **AskUserQuestion tool** to clarify
       - Then continue with creation
 
-5. **Show final status**
+6. **Show final status**
    ```bash
    openspec status --change "<name>"
    ```

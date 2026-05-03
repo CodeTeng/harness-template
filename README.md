@@ -41,12 +41,14 @@ OpenSpec 管规格和记忆，Superpowers 管设计和执行 —— 两个工具
 │   │   ├── harness-startup-workflow.mdc     #   启动顺序
 │   │   └── respond-in-chinese.mdc           #   回答用中文
 │   ├── commands/                 # /opsx:* slash 命令
-│   │   ├── opsx-propose.md       #   ① 起草 proposal/design/tasks
+│   │   ├── opsx-propose.md       #   ① 起草 proposal/design/tasks（含 size triage）
+│   │   ├── opsx-quick.md         #   小功能直通车（inline TDD + verification，0 子代理）
 │   │   ├── opsx-explore.md       #   思考模式（不写代码）
-│   │   ├── opsx-apply.md         #   ③④⑤ 设计 + 构建 + 验证
+│   │   ├── opsx-apply.md         #   ③④⑤ 设计 + 构建 + 验证（含 3 道 cost-control 闸）
 │   │   └── opsx-archive.md       #   ⑥ 归档 + 同步规格
 │   └── skills/                   # Skill 形式的同名实现
 │       ├── openspec-propose/
+│       ├── openspec-quick/
 │       ├── openspec-apply-change/
 │       ├── openspec-archive-change/
 │       └── openspec-explore/
@@ -284,14 +286,27 @@ rm -rf /tmp/ht-latest
 ## 我什么时候应该跑哪个命令？
 
 
-| 情况                        | 命令                            |
-| ------------------------- | ----------------------------- |
-| 我有一个想法，但还没想清楚             | `/opsx:explore`               |
-| 我想清楚要做什么了，开始流程            | `/opsx:propose`               |
-| 起草完了，proposal 看起来 OK，开始干活 | `/opsx:apply`                 |
-| 干到一半被打断，想接着干              | `/opsx:apply`（会从未完成的 task 继续） |
-| 全部任务打完 ✓，所有验证都过           | `/opsx:archive`               |
-| 我突然想看看现在有哪些活跃变更           | `openspec list`               |
+| 情况                                         | 命令                                                          |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| 我有一个想法，但还没想清楚                              | `/opsx:explore`                                             |
+| **小事**：bug fix / 加字段 / 改文案 / 加 log（< 1 小时）  | `/opsx:quick`                                               |
+| 真正的功能或能力交付（不确定时也用这个 — 它会自动判断小事并提示切到 quick） | `/opsx:propose`                                             |
+| 起草完了，proposal 看起来 OK，开始干活                  | `/opsx:apply`                                               |
+| 干到一半被打断，想接着干                               | `/opsx:apply`（会从未完成的 task 继续）                                |
+| 全部任务打完 ✓，所有验证都过                            | `/opsx:archive`                                             |
+| 我突然想看看现在有哪些活跃变更                            | `openspec list`                                             |
+
+### 重型路径 vs 轻量路径
+
+|                | `/opsx:propose` → `apply` → `archive`（重型）  | `/opsx:quick`（轻量）            |
+| -------------- | -------------------------------------------- | ----------------------------- |
+| 适用             | 真正的功能交付（新能力、跨文件、有设计选择）            | 小修改（< 1 小时、≤ 3 文件、无架构决策） |
+| 子代理调用数      | ~15-20+                                      | **0**                         |
+| OpenSpec 文件创建 | proposal + design + tasks + spec sync        | 仅可选的 sediment              |
+| TDD            | ✓（在子代理里）                                | ✓（inline）                    |
+| Verification   | ✓                                            | ✓                             |
+| 知识沉淀         | 自动同步进 `openspec/specs/`                  | 末尾问一句 → 用户决定           |
+| 时间             | 10-15 分钟                                   | 2-3 分钟                       |
 
 
 ---
